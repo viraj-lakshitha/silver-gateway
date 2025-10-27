@@ -7,8 +7,10 @@ Silver Gateway is a Node.js (TypeScript) API gateway and rate limiter designed t
 ```
 src/
   config/      # environment + logging helpers
+  database/    # MongoDB connection helpers
   http/        # Express app factory and middlewares
-  routes/      # HTTP route definitions
+  proxy/       # route registry + proxy engine
+  routes/      # HTTP route definitions (health, admin, gateway)
   server.ts    # process bootstrap and graceful shutdown
 docker-compose.yml
 Dockerfile
@@ -39,10 +41,37 @@ npm run start        # run the compiled server from dist/
 docker compose up --build
 ```
 
-The compose stack builds the Node.js service, then starts MongoDB and Redis alongside it for future persistence and rate-limiting features. The gateway is exposed on `http://localhost:3000/health`.
+The compose stack builds the Node.js service, then starts MongoDB and Redis alongside it for persistence and rate-limiting features. The gateway is exposed on `http://localhost:3000/health`.
+
+## Admin API (Route Management)
+
+Create, list, update, and delete proxy routes under `/admin/routes`. Routes are stored in MongoDB and cached in-memory for fast lookups.
+
+```bash
+curl -X POST http://localhost:3000/admin/routes \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Echo",
+    "pattern": "/echo/:id",
+    "methods": ["GET", "POST"],
+    "authMode": "none",
+    "upstream": {
+      "target": "http://127.0.0.1:4100",
+      "timeoutMs": 10000
+    }
+  }'
+```
+
+On success the gateway immediately serves traffic for matching requests, forwarding them to the configured upstream. Update or remove routes with `PATCH /admin/routes/:id` and `DELETE /admin/routes/:id`.
+
+## Proxy Behaviour
+
+- Requests are matched by HTTP method and `path-to-regexp` pattern priority (higher priority wins).
+- Responses bubble straight from upstream services; errors produce `502` with a JSON body.
+- Routes marked `enabled: false` are ignored until re-enabled.
 
 ## Next Steps
 
-- Implement core proxying with `http-proxy` and route configuration storage.
-- Add auth (API keys, JWT), Redis-backed rate limiting, and request logging.
-- Extend the test suite with Jest and supertest once HTTP features land.
+- Harden the proxy path (timeouts, retries, structured telemetry).
+- Layer on authentication (API keys, JWT) and Redis-backed rate limiting.
+- Expand automated tests with Jest + supertest covering admin and proxy flows.

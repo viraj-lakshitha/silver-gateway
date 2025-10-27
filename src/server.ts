@@ -2,25 +2,48 @@ import http from 'node:http';
 
 import env from './config/env';
 import { logger } from './config/logger';
+import { connectMongo, disconnectMongo } from './database/mongo';
 import { createApp } from './http/app';
 
 const app = createApp();
 
-const server = app.listen(env.port, () => {
-  logger.info({ port: env.port, env: env.nodeEnv }, 'Server is listening');
+let server: Server | null = null;
+
+const startServer = async (): Promise<Server> => {
+  await connectMongo();
+
+  return new Promise((resolve) => {
+    server = app.listen(env.port, () => {
+      logger.info({ port: env.port, env: env.nodeEnv }, 'Server is listening');
+      resolve(server as Server);
+    });
+  });
+};
+
+void startServer().catch((error) => {
+  logger.error({ err: error }, 'Failed to start server');
+  process.exit(1);
 });
 
 const gracefulShutdown = (signal: NodeJS.Signals) => {
   logger.info({ signal }, 'Received shutdown signal');
-  server.close((err?: Error) => {
-    if (err) {
-      logger.error({ err }, 'Error during server shutdown');
-      process.exitCode = 1;
-    }
+  const closeServer = () =>
+    server?.close((err?: Error) => {
+      if (err) {
+        logger.error({ err }, 'Error during server shutdown');
+        process.exitCode = 1;
+      }
+      logger.info('Server closed');
+      process.exit();
+    });
 
-    logger.info('Server closed');
-    process.exit();
-  });
+  void disconnectMongo()
+    .catch((error) => {
+      logger.error({ err: error }, 'Error closing MongoDB connection');
+    })
+    .finally(() => {
+      closeServer();
+    });
 };
 
 process.on('uncaughtException', (error) => {
@@ -36,4 +59,4 @@ process.on('unhandledRejection', (reason) => {
 });
 
 export type Server = http.Server<typeof http.IncomingMessage, typeof http.ServerResponse>;
-export default server;
+export { app, startServer };
