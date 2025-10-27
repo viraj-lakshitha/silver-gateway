@@ -1,0 +1,16 @@
+*.md
+!README.md
+!CONTRIBUTION.md
+
+.claude.md
+.codex
+
+# Node.js artifacts
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+npm-debug.log*
+pnpm-debug.log*
+yarn-error.log*
