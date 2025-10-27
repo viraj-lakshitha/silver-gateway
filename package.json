@@ -23,7 +23,10 @@
     "express": "^5.1.0",
     "helmet": "^8.1.0",
     "http-proxy": "^1.18.1",
-    "pino": "^10.1.0"
+    "mongoose": "^8.19.2",
+    "path-to-regexp": "^8.3.0",
+    "pino": "^10.1.0",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@types/express": "^5.0.5",
