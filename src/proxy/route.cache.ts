@@ -18,6 +18,10 @@ export interface CompiledRoute {
     timeoutMs: number;
     headers?: Record<string, string>;
   };
+  rateLimit?: {
+    limit: number;
+    windowSec: number;
+  };
   matcher: MatchFunction<Record<string, string>>;
 }
 
@@ -34,6 +38,7 @@ const buildCompiledRoute = (route: {
   authMode: CompiledRoute['authMode'];
   priority: number;
   upstream: CompiledRoute['upstream'];
+  rateLimit?: CompiledRoute['rateLimit'];
 }): CompiledRoute => {
   const matcher = match<Record<string, string>>(route.pattern, {
     decode: decodeURIComponent,
@@ -61,7 +66,8 @@ const fetchRoutes = async (): Promise<CompiledRoute[]> => {
       methods: route.methods,
       authMode: route.authMode,
       priority: route.priority,
-      upstream: route.upstream
+      upstream: route.upstream,
+      rateLimit: route.rateLimit ?? undefined
     })
   );
 };

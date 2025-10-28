@@ -21,6 +21,14 @@ const UpstreamSchema = new Schema(
   { _id: false }
 );
 
+const RateLimitSchema = new Schema(
+  {
+    limit: { type: Number, min: 1, required: true },
+    windowSec: { type: Number, min: 1, required: true }
+  },
+  { _id: false }
+);
+
 const RouteSchema = new Schema(
   {
     name: { type: String, required: true, trim: true },
@@ -41,6 +49,10 @@ const RouteSchema = new Schema(
     upstream: {
       type: UpstreamSchema,
       required: true
+    },
+    rateLimit: {
+      type: RateLimitSchema,
+      required: false
     }
   },
   {
