@@ -24,3 +24,17 @@ export class ValidationError extends HttpError {
     this.name = 'ValidationError';
   }
 }
+
+export class UnauthorizedError extends HttpError {
+  constructor(message = 'Unauthorized', details?: unknown) {
+    super(401, message, details);
+    this.name = 'UnauthorizedError';
+  }
+}
+
+export class ForbiddenError extends HttpError {
+  constructor(message = 'Forbidden', details?: unknown) {
+    super(403, message, details);
+    this.name = 'ForbiddenError';
+  }
+}
