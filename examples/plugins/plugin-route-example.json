@@ -1,0 +1,37 @@
+{
+  "name": "Orders Proxy with Plugins",
+  "pattern": "/orders/:id",
+  "methods": ["GET"],
+  "authMode": "none",
+  "upstream": {
+    "target": "http://orders-service.internal",
+    "timeoutMs": 5000,
+    "headers": {
+      "x-service-name": "gateway"
+    }
+  },
+  "plugins": {
+    "pre": [
+      {
+        "name": "header-injector",
+        "config": {
+          "header": "x-tenant",
+          "value": "acme"
+        }
+      }
+    ],
+    "post": [],
+    "error": [
+      {
+        "name": "error-logger",
+        "config": {
+          "level": "warn"
+        }
+      }
+    ]
+  },
+  "rateLimit": {
+    "limit": 200,
+    "windowSec": 60
+  }
+}

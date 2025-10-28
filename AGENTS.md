@@ -10,6 +10,9 @@ Keep runtime code inside `src/`, grouping files by responsibility: `src/config` 
 - `npm run build` — emit compiled JavaScript to `dist/`.
 - `npm run start` — execute the compiled server (ES modules via Node 20).
 - `docker compose up --build` — build the container image and start MongoDB, Redis, and the gateway service together (required before hitting the admin API).
+- `npm run test` — run the Jest suites (unit + integration);
+- `npm run test:watch` — interactive test mode during development.
+- `npx tsc -p tsconfig.test.json` — optional type-check for files under `test/`.
 
 ## Proxy & Route Management
 - Admin endpoints live under `/admin/routes`; mutations automatically invalidate the in-memory route cache (`src/proxy/route.cache.ts`).
