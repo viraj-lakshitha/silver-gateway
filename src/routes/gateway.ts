@@ -4,6 +4,7 @@ import express, { Router } from 'express';
 
 import { resolvePrincipalForRoute } from '@auth/auth.middleware';
 import type { ApiKeyPrincipal } from '@auth/principal';
+import { enqueueUsageLog } from '@analytics/usage-log.service';
 import { logger } from '@config/logger';
 import { HttpError, NotFoundError, TooManyRequestsError } from '@http/errors';
 import { resolveRoute } from '@proxy/route.cache';
@@ -26,6 +27,12 @@ router.use(
 
     const { route } = match;
 
+    const startTime = process.hrtime.bigint();
+    const requestId = req.header('x-request-id') ?? crypto.randomUUID();
+    res.setHeader('x-request-id', requestId);
+
+    const requestSize = Number.parseInt(req.header('content-length') ?? '0', 10) || 0;
+
     const identifier = (() => {
       const apiKey = req.header('x-api-key');
       if (apiKey) {
@@ -37,6 +44,8 @@ router.use(
       }
       return `ip:${req.ip ?? req.socket.remoteAddress ?? 'unknown'}`;
     })();
+
+    await resolvePrincipalForRoute(req, route);
 
     const rateLimitResult = await consumeRateLimit({
       identifier,
@@ -107,6 +116,33 @@ router.use(
         );
       }
     );
+
+    res.on('finish', () => {
+      const endTime = process.hrtime.bigint();
+      const durationMs = Number((endTime - startTime) / 1_000_000n);
+      const bytesOutHeader = res.getHeader('content-length');
+      const bytesOut = bytesOutHeader ? Number(bytesOutHeader) || 0 : 0;
+
+      const principalContext = req.principal;
+      const apiKeyPrincipal = principalContext?.principals.find(
+        (principal) => principal.source === 'api-key'
+      ) as ApiKeyPrincipal | undefined;
+
+      enqueueUsageLog({
+        routeId: route.id,
+        method: req.method.toUpperCase(),
+        statusCode: res.statusCode,
+        durationMs,
+        bytesIn: requestSize,
+        bytesOut,
+        principalId: principalContext?.subject,
+        principalSource: principalContext?.principals[0]?.source,
+        principalScopes: principalContext?.scopes ?? [],
+        apiKeyDisplayId: apiKeyPrincipal?.apiKey.displayId,
+        requestId,
+        timestamp: new Date()
+      });
+    });
   })
 );
 

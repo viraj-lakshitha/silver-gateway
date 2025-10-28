@@ -17,6 +17,10 @@ const env = {
     defaultLimit: Number(process.env.RATE_LIMIT_DEFAULT_LIMIT ?? 1000),
     defaultWindowSec: Number(process.env.RATE_LIMIT_DEFAULT_WINDOW_SEC ?? 60)
   },
+  usageLog: {
+    batchSize: Number(process.env.USAGE_LOG_BATCH_SIZE ?? 200),
+    flushIntervalMs: Number(process.env.USAGE_LOG_FLUSH_INTERVAL_MS ?? 2000)
+  },
   apiKey: {
     prefix: process.env.API_KEY_PREFIX ?? 'sgk_',
     secretBytes: Number(process.env.API_KEY_SECRET_BYTES ?? 32)
@@ -44,6 +48,14 @@ if (Number.isNaN(env.rateLimit.defaultWindowSec) || env.rateLimit.defaultWindowS
 
 if (Number.isNaN(env.apiKey.secretBytes) || env.apiKey.secretBytes < 24) {
   throw new Error('API_KEY_SECRET_BYTES must be a number >= 24');
+}
+
+if (Number.isNaN(env.usageLog.batchSize) || env.usageLog.batchSize <= 0) {
+  throw new Error('USAGE_LOG_BATCH_SIZE must be a positive number');
+}
+
+if (Number.isNaN(env.usageLog.flushIntervalMs) || env.usageLog.flushIntervalMs <= 0) {
+  throw new Error('USAGE_LOG_FLUSH_INTERVAL_MS must be a positive number');
 }
 
 export type Env = typeof env;

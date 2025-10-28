@@ -31,7 +31,7 @@ module.exports = {
         ],
         pathGroups: [
           {
-            pattern: '@{auth,config,database,http,proxy,ratelimit,routes,utils}{,/**}',
+            pattern: '@{analytics,auth,config,database,http,proxy,ratelimit,routes,utils}{,/**}',
             group: 'internal',
             position: 'before'
           }

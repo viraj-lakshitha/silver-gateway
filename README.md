@@ -86,6 +86,13 @@ On success the gateway immediately serves traffic for matching requests, forward
 - Identifiers are derived from `x-api-key` if present, otherwise the request IP (including `x-forwarded-for`).
 - Responses include `x-ratelimit-limit`, `x-ratelimit-remaining`, and `x-ratelimit-reset` headers, plus `retry-after` on `429`.
 
+## Usage Logging & Analytics
+
+- Requests emit structured usage entries buffered via `src/analytics/usage-log.service.ts` and persisted in `usage_logs`.
+- Configure batching with `USAGE_LOG_BATCH_SIZE` and `USAGE_LOG_FLUSH_INTERVAL_MS` (ms).
+- Query aggregates via `GET /admin/usage?from=...&to=...&routeId=...&apiKeyDisplayId=...`, or retrieve recent logs with `GET /admin/usage/logs?limit=200`.
+- Logged fields include request/response sizes, latency, status, principal metadata, and optional API key identifiers.
+
 ## Admin API (API Keys)
 
 Issue, rotate, and revoke API keys with the new `/admin/api-keys` endpoints. Keys are returned once in clear-text (format `sgk_<display>.<secret>`) and stored hashed via Argon2. Example:
