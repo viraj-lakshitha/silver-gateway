@@ -1,18 +1,18 @@
 import express, { Router } from 'express';
 import { ZodError } from 'zod';
 
-import { ValidationError, NotFoundError } from '../http/errors';
+import { ValidationError, NotFoundError } from '@http/errors';
 import {
   createRoute,
   deleteRoute,
   getRouteById,
   listRoutes,
   updateRoute
-} from '../proxy/route.service';
+} from '@proxy/route.service';
 import {
   normalizeRouteCreateInput,
   normalizeRouteUpdateInput
-} from '../proxy/route.validation';
+} from '@proxy/route.validation';
 
 const router = Router();
 

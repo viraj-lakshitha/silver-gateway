@@ -1,7 +1,7 @@
 import { match } from 'path-to-regexp';
 
-import { logger } from '../config/logger';
-import { RouteModel } from './route.model';
+import { logger } from '@config/logger';
+import { RouteModel } from '@proxy/route.model';
 
 import type { MatchFunction } from 'path-to-regexp';
 
@@ -66,7 +66,9 @@ const fetchRoutes = async (): Promise<CompiledRoute[]> => {
   );
 };
 
-export const getCompiledRoutes = async (forceReload = false): Promise<CompiledRoute[]> => {
+export const getCompiledRoutes = async (
+  forceReload = false
+): Promise<CompiledRoute[]> => {
   const now = Date.now();
   if (!forceReload && cache.length > 0 && now - loadedAt < CACHE_TTL_MS) {
     return cache;

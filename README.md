@@ -6,10 +6,10 @@ Silver Gateway is a Node.js (TypeScript) API gateway and rate limiter designed t
 
 ```
 src/
-  config/      # environment + logging helpers
-  database/    # MongoDB connection helpers
-  http/        # Express app factory and middlewares
-  proxy/       # route registry + proxy engine
+  config/      # environment + logging helpers (import via @config/*)
+  database/    # MongoDB connection helpers (@database/*)
+  http/        # Express app factory and middlewares (@http/*)
+  proxy/       # route registry + proxy engine (@proxy/*)
   routes/      # HTTP route definitions (health, admin, gateway)
   server.ts    # process bootstrap and graceful shutdown
 docker-compose.yml
@@ -18,7 +18,7 @@ Dockerfile
 
 ## Prerequisites
 
-- Node.js 20.x
+- Node.js 20.x (`nvm use` reads the provided `.nvmrc`)
 - npm 10.x
 - Docker (for local infrastructure)
 
@@ -75,3 +75,7 @@ On success the gateway immediately serves traffic for matching requests, forward
 - Harden the proxy path (timeouts, retries, structured telemetry).
 - Layer on authentication (API keys, JWT) and Redis-backed rate limiting.
 - Expand automated tests with Jest + supertest covering admin and proxy flows.
+
+## License
+
+Distributed under the MIT License. See `LICENSE` for details.

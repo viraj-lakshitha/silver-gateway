@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 
-import env from '../config/env';
-import { logger } from '../config/logger';
+import env from '@config/env';
+import { logger } from '@config/logger';
 
 const connectionState = () => mongoose.connection.readyState;
 

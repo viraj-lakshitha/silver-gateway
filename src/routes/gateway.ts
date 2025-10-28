@@ -1,9 +1,9 @@
 import express, { Router } from 'express';
 
-import { logger } from '../config/logger';
-import { HttpError, NotFoundError } from '../http/errors';
-import { proxyServer } from '../proxy/proxy.server';
-import { resolveRoute } from '../proxy/route.cache';
+import { logger } from '@config/logger';
+import { HttpError, NotFoundError } from '@http/errors';
+import { proxyServer } from '@proxy/proxy.server';
+import { resolveRoute } from '@proxy/route.cache';
 
 const router = Router();
 

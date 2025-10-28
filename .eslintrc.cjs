@@ -29,9 +29,26 @@ module.exports = {
           'object',
           'type'
         ],
+        pathGroups: [
+          {
+            pattern: '@{config,database,http,proxy,routes,utils}{,/**}',
+            group: 'internal',
+            position: 'before'
+          }
+        ],
+        pathGroupsExcludedImportTypes: ['builtin'],
         'newlines-between': 'always'
       }
-    ]
+    ],
+    'import/no-named-as-default': 'off',
+    'import/no-named-as-default-member': 'off'
+  },
+  settings: {
+    'import/resolver': {
+      typescript: {
+        project: ['./tsconfig.json']
+      }
+    }
   },
   ignorePatterns: ['dist/', 'node_modules/']
 };
