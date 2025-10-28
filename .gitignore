@@ -1,6 +1,8 @@
 *.md
 !README.md
 !CONTRIBUTION.md
+!AGENTS.md
+!PLAN.md
 
 .claude.md
 .codex

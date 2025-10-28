@@ -5,6 +5,7 @@ import { logger } from '@config/logger';
 import { connectMongo, disconnectMongo } from '@database/mongo';
 import { connectRedis, disconnectRedis } from '@database/redis';
 import { flushQueue as flushUsageLogs } from '@analytics/usage-log.service';
+import { loadPlugins } from '@plugins/registry';
 import { createApp } from '@http/app';
 
 const app = createApp();
@@ -13,6 +14,7 @@ let server: Server | null = null;
 
 const startServer = async (): Promise<Server> => {
   await Promise.all([connectMongo(), connectRedis()]);
+  await loadPlugins();
 
   return new Promise((resolve) => {
     server = app.listen(env.port, () => {

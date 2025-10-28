@@ -4,6 +4,17 @@ const httpMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD']
 
 const authModes = ['apiKey', 'jwt', 'both', 'none'] as const;
 
+const PluginRefSchema = z.object({
+  name: z.string().min(1).max(80),
+  config: z.record(z.string(), z.unknown()).optional()
+});
+
+const PluginGroupsSchema = z.object({
+  pre: z.array(PluginRefSchema).optional(),
+  post: z.array(PluginRefSchema).optional(),
+  error: z.array(PluginRefSchema).optional()
+});
+
 const UpstreamSchema = z.object({
   target: z.string().url(),
   timeoutMs: z.number().int().min(100).max(120_000).optional(),
@@ -27,6 +38,7 @@ const BaseRouteSchema = z.object({
   enabled: z.boolean().optional(),
   priority: z.number().int().min(0).max(100).optional(),
   upstream: UpstreamSchema,
+  plugins: PluginGroupsSchema.optional(),
   rateLimit: RateLimitSchema.optional()
 });
 
@@ -34,6 +46,7 @@ export const CreateRouteSchema = BaseRouteSchema;
 
 export const UpdateRouteSchema = BaseRouteSchema.partial().extend({
   upstream: UpstreamSchema.partial().optional(),
+  plugins: PluginGroupsSchema.optional(),
   rateLimit: z.union([RateLimitSchema, z.null()]).optional()
 });
 
@@ -42,7 +55,7 @@ export type UpdateRouteInput = z.infer<typeof UpdateRouteSchema>;
 
 export type NormalizedRouteInput = Omit<
   CreateRouteInput,
-  'methods' | 'authMode' | 'enabled' | 'priority' | 'upstream'
+  'methods' | 'authMode' | 'enabled' | 'priority' | 'upstream' | 'plugins'
 > & {
   methods: (typeof httpMethods)[number][];
   authMode: (typeof authModes)[number];
@@ -53,17 +66,25 @@ export type NormalizedRouteInput = Omit<
     timeoutMs: number;
     headers?: Record<string, string>;
   };
+  plugins: {
+    pre: PluginReference[];
+    post: PluginReference[];
+    error: PluginReference[];
+  };
   rateLimit?: {
     limit: number;
     windowSec: number;
   };
 };
 
+export type PluginReference = z.infer<typeof PluginRefSchema>;
+
 export type NormalizedRouteUpdateInput = Partial<
-  Omit<NormalizedRouteInput, 'upstream' | 'rateLimit'>
+  Omit<NormalizedRouteInput, 'upstream' | 'rateLimit' | 'plugins'>
 > & {
   upstream?: Partial<NormalizedRouteInput['upstream']>;
   rateLimit?: NormalizedRouteInput['rateLimit'] | null;
+  plugins?: NormalizedRouteInput['plugins'];
 };
 
 export const normalizeRouteCreateInput = (payload: unknown): NormalizedRouteInput => {
@@ -83,6 +104,11 @@ export const normalizeRouteCreateInput = (payload: unknown): NormalizedRouteInpu
       target: parsed.upstream.target,
       timeoutMs: parsed.upstream.timeoutMs ?? 10_000,
       headers: parsed.upstream.headers
+    },
+    plugins: {
+      pre: parsed.plugins?.pre ?? [],
+      post: parsed.plugins?.post ?? [],
+      error: parsed.plugins?.error ?? []
     },
     rateLimit: parsed.rateLimit
       ? {
@@ -129,6 +155,13 @@ export const normalizeRouteUpdateInput = (
         windowSec: parsed.rateLimit.windowSec
       };
     }
+  }
+  if (parsed.plugins !== undefined) {
+    result.plugins = {
+      pre: parsed.plugins.pre ?? [],
+      post: parsed.plugins.post ?? [],
+      error: parsed.plugins.error ?? []
+    };
   }
 
   return result as NormalizedRouteUpdateInput;

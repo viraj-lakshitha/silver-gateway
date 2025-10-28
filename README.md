@@ -31,6 +31,9 @@ Copy `.env.example` to `.env` or export the variables manually before running th
 - `API_KEY_PREFIX`, `API_KEY_SECRET_BYTES` — control issued API key formatting.
 - `JWT_SECRET` (for HS256/HS512) or `JWT_JWKS_URI` (for RS256) — pick one verification strategy.
 - `JWT_ISSUER`, `JWT_AUDIENCE`, `JWT_ALGORITHMS` — optional claim checks for JWT validation.
+- `RATE_LIMIT_DEFAULT_LIMIT`, `RATE_LIMIT_DEFAULT_WINDOW_SEC` — global token bucket defaults.
+- `USAGE_LOG_BATCH_SIZE`, `USAGE_LOG_FLUSH_INTERVAL_MS` — async logging batch behaviour.
+- `PLUGINS_DIR`, `PLUGIN_TIMEOUT_MS` — filesystem path and execution timeout for gateway plugins.
 
 ## Local Development
 
@@ -92,6 +95,26 @@ On success the gateway immediately serves traffic for matching requests, forward
 - Configure batching with `USAGE_LOG_BATCH_SIZE` and `USAGE_LOG_FLUSH_INTERVAL_MS` (ms).
 - Query aggregates via `GET /admin/usage?from=...&to=...&routeId=...&apiKeyDisplayId=...`, or retrieve recent logs with `GET /admin/usage/logs?limit=200`.
 - Logged fields include request/response sizes, latency, status, principal metadata, and optional API key identifiers.
+
+## Plugin Framework
+
+- Drop local plugins into the `plugins/` directory (configurable via `PLUGINS_DIR`). Each module exports a manifest with optional `pre`, `post`, and `error` hooks.
+- Hooks run with a bounded timeout (`PLUGIN_TIMEOUT_MS`) and receive Express request/response objects plus principal + route context.
+- Reference plugins per route using the `plugins` field when creating routes:
+
+```jsonc
+{
+  "name": "Orders Proxy",
+  "pattern": "/orders/:id",
+  "methods": ["GET"],
+  "upstream": { "target": "http://orders:4000" },
+  "plugins": {
+    "pre": [{ "name": "header-injector", "config": { "header": "x-tenant", "value": "demo" } }],
+    "error": [{ "name": "error-logger" }]
+  }
+}
+```
+- List loaded plugins via `GET /admin/plugins`.
 
 ## Admin API (API Keys)
 

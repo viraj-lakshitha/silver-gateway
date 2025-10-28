@@ -1,5 +1,13 @@
 import { Schema, InferSchemaType, model, models } from 'mongoose';
 
+const PluginRefSchema = new Schema(
+  {
+    name: { type: String, required: true },
+    config: { type: Schema.Types.Mixed }
+  },
+  { _id: false }
+);
+
 const UpstreamSchema = new Schema(
   {
     target: {
@@ -49,6 +57,11 @@ const RouteSchema = new Schema(
     upstream: {
       type: UpstreamSchema,
       required: true
+    },
+    plugins: {
+      pre: { type: [PluginRefSchema], default: [] },
+      post: { type: [PluginRefSchema], default: [] },
+      error: { type: [PluginRefSchema], default: [] }
     },
     rateLimit: {
       type: RateLimitSchema,

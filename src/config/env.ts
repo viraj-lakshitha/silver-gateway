@@ -1,3 +1,5 @@
+import path from 'node:path';
+
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -8,6 +10,10 @@ const parseAlgorithms = (value: string | undefined): string[] =>
     .map((alg) => alg.trim())
     .filter(Boolean);
 
+const pluginsDir = process.env.PLUGINS_DIR
+  ? path.resolve(process.env.PLUGINS_DIR)
+  : path.resolve(process.cwd(), 'plugins');
+
 const env = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
   port: Number(process.env.PORT ?? 3000),
@@ -16,6 +22,10 @@ const env = {
   rateLimit: {
     defaultLimit: Number(process.env.RATE_LIMIT_DEFAULT_LIMIT ?? 1000),
     defaultWindowSec: Number(process.env.RATE_LIMIT_DEFAULT_WINDOW_SEC ?? 60)
+  },
+  plugins: {
+    directory: pluginsDir,
+    timeoutMs: Number(process.env.PLUGIN_TIMEOUT_MS ?? 500)
   },
   usageLog: {
     batchSize: Number(process.env.USAGE_LOG_BATCH_SIZE ?? 200),
@@ -56,6 +66,10 @@ if (Number.isNaN(env.usageLog.batchSize) || env.usageLog.batchSize <= 0) {
 
 if (Number.isNaN(env.usageLog.flushIntervalMs) || env.usageLog.flushIntervalMs <= 0) {
   throw new Error('USAGE_LOG_FLUSH_INTERVAL_MS must be a positive number');
+}
+
+if (Number.isNaN(env.plugins.timeoutMs) || env.plugins.timeoutMs <= 0) {
+  throw new Error('PLUGIN_TIMEOUT_MS must be a positive number');
 }
 
 export type Env = typeof env;

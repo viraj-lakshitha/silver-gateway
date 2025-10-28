@@ -2,7 +2,8 @@ import { invalidateRouteCache } from '@proxy/route.cache';
 import { RouteModel, Route } from '@proxy/route.model';
 import type {
   NormalizedRouteInput,
-  NormalizedRouteUpdateInput
+  NormalizedRouteUpdateInput,
+  PluginReference
 } from '@proxy/route.validation';
 
 import type { HydratedDocument } from 'mongoose';
@@ -17,6 +18,12 @@ export interface RouteDto {
   enabled: boolean;
   priority: number;
   upstream: Route['upstream'];
+  plugins: {
+    pre: PluginReference[];
+    post: PluginReference[];
+    error: PluginReference[];
+  };
+  rateLimit?: Route['rateLimit'];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -31,6 +38,12 @@ const toDto = (route: HydratedDocument<Route>): RouteDto => ({
   enabled: route.enabled,
   priority: route.priority,
   upstream: route.upstream,
+  plugins: {
+    pre: route.plugins?.pre ?? [],
+    post: route.plugins?.post ?? [],
+    error: route.plugins?.error ?? []
+  },
+  rateLimit: route.rateLimit ?? undefined,
   createdAt: route.createdAt,
   updatedAt: route.updatedAt
 });
@@ -95,6 +108,9 @@ export const updateRoute = async (
         windowSec: input.rateLimit.windowSec
       };
     }
+  }
+  if (input.plugins !== undefined) {
+    setPayload.plugins = input.plugins;
   }
 
   const updateOperations: Record<string, unknown> = {};
