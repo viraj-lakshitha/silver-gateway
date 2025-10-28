@@ -53,5 +53,4 @@ RouteSchema.index({ priority: -1, updatedAt: -1 });
 
 export type Route = InferSchemaType<typeof RouteSchema>;
 
-export const RouteModel =
-  models.Route || model<Route>('Route', RouteSchema, 'routes');
+export const RouteModel = models.Route || model<Route>('Route', RouteSchema, 'routes');

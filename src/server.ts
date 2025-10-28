@@ -1,9 +1,9 @@
 import http from 'node:http';
 
-import env from './config/env';
-import { logger } from './config/logger';
-import { connectMongo, disconnectMongo } from './database/mongo';
-import { createApp } from './http/app';
+import env from '@config/env';
+import { logger } from '@config/logger';
+import { connectMongo, disconnectMongo } from '@database/mongo';
+import { createApp } from '@http/app';
 
 const app = createApp();
 

@@ -1,14 +1,6 @@
 import { z } from 'zod';
 
-const httpMethods = [
-  'GET',
-  'POST',
-  'PUT',
-  'PATCH',
-  'DELETE',
-  'OPTIONS',
-  'HEAD'
-] as const;
+const httpMethods = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'] as const;
 
 const authModes = ['apiKey', 'jwt', 'both', 'none'] as const;
 
@@ -45,7 +37,7 @@ export type NormalizedRouteInput = Omit<
   CreateRouteInput,
   'methods' | 'authMode' | 'enabled' | 'priority' | 'upstream'
 > & {
-  methods: typeof httpMethods[number][];
+  methods: (typeof httpMethods)[number][];
   authMode: (typeof authModes)[number];
   enabled: boolean;
   priority: number;
@@ -56,7 +48,9 @@ export type NormalizedRouteInput = Omit<
   };
 };
 
-export type NormalizedRouteUpdateInput = Partial<Omit<NormalizedRouteInput, 'upstream'>> & {
+export type NormalizedRouteUpdateInput = Partial<
+  Omit<NormalizedRouteInput, 'upstream'>
+> & {
   upstream?: Partial<NormalizedRouteInput['upstream']>;
 };
 
@@ -67,7 +61,9 @@ export const normalizeRouteCreateInput = (payload: unknown): NormalizedRouteInpu
     name: parsed.name,
     description: parsed.description,
     pattern: parsed.pattern,
-    methods: (parsed.methods ?? ['GET']).map((method) => method.toUpperCase() as typeof httpMethods[number]),
+    methods: (parsed.methods ?? ['GET']).map(
+      (method) => method.toUpperCase() as (typeof httpMethods)[number]
+    ),
     authMode: parsed.authMode ?? 'none',
     enabled: parsed.enabled ?? true,
     priority: parsed.priority ?? 0,
@@ -79,7 +75,9 @@ export const normalizeRouteCreateInput = (payload: unknown): NormalizedRouteInpu
   };
 };
 
-export const normalizeRouteUpdateInput = (payload: unknown): NormalizedRouteUpdateInput => {
+export const normalizeRouteUpdateInput = (
+  payload: unknown
+): NormalizedRouteUpdateInput => {
   const parsed = UpdateRouteSchema.parse(payload);
   const result: NormalizedRouteUpdateInput = {};
 
@@ -88,7 +86,7 @@ export const normalizeRouteUpdateInput = (payload: unknown): NormalizedRouteUpda
   if (parsed.pattern !== undefined) result.pattern = parsed.pattern;
   if (parsed.methods !== undefined) {
     result.methods = parsed.methods.map(
-      (method) => method.toUpperCase() as typeof httpMethods[number]
+      (method) => method.toUpperCase() as (typeof httpMethods)[number]
     );
   }
   if (parsed.authMode !== undefined) result.authMode = parsed.authMode;
@@ -97,7 +95,8 @@ export const normalizeRouteUpdateInput = (payload: unknown): NormalizedRouteUpda
   if (parsed.upstream !== undefined) {
     const upstream: Partial<NormalizedRouteInput['upstream']> = {};
     if (parsed.upstream.target !== undefined) upstream.target = parsed.upstream.target;
-    if (parsed.upstream.timeoutMs !== undefined) upstream.timeoutMs = parsed.upstream.timeoutMs;
+    if (parsed.upstream.timeoutMs !== undefined)
+      upstream.timeoutMs = parsed.upstream.timeoutMs;
     if (parsed.upstream.headers !== undefined) upstream.headers = parsed.upstream.headers;
     if (Object.keys(upstream).length > 0) {
       result.upstream = upstream;

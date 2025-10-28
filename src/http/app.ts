@@ -1,9 +1,9 @@
 import express, { Application } from 'express';
 import helmet from 'helmet';
 
-import routes from '../routes';
-import { logger } from '../config/logger';
-import { HttpError } from './errors';
+import { logger } from '@config/logger';
+import { HttpError } from '@http/errors';
+import routes from '@routes';
 
 export const createApp = (): Application => {
   const app = express();
@@ -16,8 +16,9 @@ export const createApp = (): Application => {
   app.use(routes);
 
   // Basic error handler to ensure JSON responses
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  const errorHandler: express.ErrorRequestHandler = (err, _req, res, next) => {
+    void next;
+
     if (err instanceof HttpError) {
       if (err.statusCode >= 500) {
         logger.error({ err }, 'HTTP error encountered');
@@ -33,7 +34,9 @@ export const createApp = (): Application => {
 
     logger.error({ err }, 'Unhandled error');
     return res.status(500).json({ error: 'Internal Server Error' });
-  });
+  };
+
+  app.use(errorHandler);
 
   return app;
 };

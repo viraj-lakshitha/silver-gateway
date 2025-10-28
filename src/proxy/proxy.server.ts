@@ -1,6 +1,6 @@
 import httpProxy from 'http-proxy';
 
-import { logger } from '../config/logger';
+import { logger } from '@config/logger';
 
 export const proxyServer = httpProxy.createProxyServer({
   xfwd: true,

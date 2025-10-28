@@ -1,8 +1,11 @@
-import { invalidateRouteCache } from './route.cache';
-import { RouteModel, Route } from './route.model';
+import { invalidateRouteCache } from '@proxy/route.cache';
+import { RouteModel, Route } from '@proxy/route.model';
+import type {
+  NormalizedRouteInput,
+  NormalizedRouteUpdateInput
+} from '@proxy/route.validation';
 
 import type { HydratedDocument } from 'mongoose';
-import type { NormalizedRouteInput, NormalizedRouteUpdateInput } from './route.validation';
 
 export interface RouteDto {
   id: string;

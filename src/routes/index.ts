@@ -1,8 +1,8 @@
 import { Router } from 'express';
 
-import adminRouter from './admin';
-import gatewayRouter from './gateway';
-import healthRouter from './health';
+import adminRouter from '@routes/admin';
+import gatewayRouter from '@routes/gateway';
+import healthRouter from '@routes/health';
 
 const router = Router();
 
