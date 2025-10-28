@@ -14,6 +14,7 @@
     "types": ["node"],
     "baseUrl": "src",
     "paths": {
+      "@auth/*": ["./auth/*"],
       "@config/*": ["./config/*"],
       "@database/*": ["./database/*"],
       "@http/*": ["./http/*"],
@@ -24,6 +25,6 @@
       "@utils/*": ["./utils/*"]
     }
   },
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts", "src/**/*.d.ts"],
   "exclude": ["dist", "node_modules"]
 }

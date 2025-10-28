@@ -2,6 +2,8 @@ import crypto from 'node:crypto';
 
 import express, { Router } from 'express';
 
+import { resolvePrincipalForRoute } from '@auth/auth.middleware';
+import type { ApiKeyPrincipal } from '@auth/principal';
 import { logger } from '@config/logger';
 import { HttpError, NotFoundError, TooManyRequestsError } from '@http/errors';
 import { resolveRoute } from '@proxy/route.cache';
@@ -57,10 +59,33 @@ router.use(
       });
     }
 
+    await resolvePrincipalForRoute(req, route);
+
     logger.debug(
       { routeId: route.id, target: route.upstream.target, path: req.originalUrl },
       'Forwarding request to upstream'
     );
+
+    const upstreamHeaders: Record<string, string> = {
+      ...(route.upstream.headers ?? {})
+    };
+
+    const principalContext = req.principal;
+    if (principalContext?.subject) {
+      upstreamHeaders['x-principal-subject'] = principalContext.subject;
+    }
+
+    if (principalContext?.scopes.length) {
+      upstreamHeaders['x-principal-scopes'] = principalContext.scopes.join(' ');
+    }
+
+    const apiKeyPrincipal = principalContext?.principals.find(
+      (principal) => principal.source === 'api-key'
+    ) as ApiKeyPrincipal | undefined;
+
+    if (apiKeyPrincipal) {
+      upstreamHeaders['x-api-key-id'] = apiKeyPrincipal.apiKey.displayId;
+    }
 
     proxyServer.web(
       req,
@@ -71,7 +96,7 @@ router.use(
         timeout: route.upstream.timeoutMs,
         proxyTimeout: route.upstream.timeoutMs,
         preserveHeaderKeyCase: true,
-        headers: route.upstream.headers
+        headers: upstreamHeaders
       },
       (error) => {
         next(

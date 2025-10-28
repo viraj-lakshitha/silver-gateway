@@ -40,13 +40,24 @@ module.exports = {
         'newlines-between': 'always'
       }
     ],
+    'import/no-unresolved': [
+      'error',
+      {
+        ignore: ['argon2', 'jose']
+      }
+    ],
     'import/no-named-as-default': 'off',
     'import/no-named-as-default-member': 'off'
   },
   settings: {
     'import/resolver': {
       typescript: {
-        project: ['./tsconfig.json']
+        project: ['./tsconfig.json'],
+        alwaysTryTypes: true
+      },
+      node: {
+        extensions: ['.js', '.ts'],
+        moduleDirectory: ['node_modules', 'src']
       }
     }
   },

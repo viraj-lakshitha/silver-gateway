@@ -7,6 +7,7 @@ Silver Gateway is a Node.js (TypeScript) API gateway and rate limiter designed t
 ```
 src/
   config/      # environment + logging helpers (import via @config/*)
+  auth/        # API key & JWT logic (@auth/*)
   database/    # MongoDB connection helpers (@database/*)
   ratelimit/   # Redis token bucket logic (@ratelimit/*)
   http/        # Express app factory and middlewares (@http/*)
@@ -24,6 +25,12 @@ Dockerfile
 - Docker (for local infrastructure)
 
 Copy `.env.example` to `.env` or export the variables manually before running the app.
+
+### Key Environment Variables
+
+- `API_KEY_PREFIX`, `API_KEY_SECRET_BYTES` — control issued API key formatting.
+- `JWT_SECRET` (for HS256/HS512) or `JWT_JWKS_URI` (for RS256) — pick one verification strategy.
+- `JWT_ISSUER`, `JWT_AUDIENCE`, `JWT_ALGORITHMS` — optional claim checks for JWT validation.
 
 ## Local Development
 
@@ -79,6 +86,29 @@ On success the gateway immediately serves traffic for matching requests, forward
 - Identifiers are derived from `x-api-key` if present, otherwise the request IP (including `x-forwarded-for`).
 - Responses include `x-ratelimit-limit`, `x-ratelimit-remaining`, and `x-ratelimit-reset` headers, plus `retry-after` on `429`.
 
+## Admin API (API Keys)
+
+Issue, rotate, and revoke API keys with the new `/admin/api-keys` endpoints. Keys are returned once in clear-text (format `sgk_<display>.<secret>`) and stored hashed via Argon2. Example:
+
+```bash
+curl -X POST http://localhost:3000/admin/api-keys \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "demo key",
+    "description": "Used for local testing",
+    "scopes": ["routes:read"]
+  }'
+```
+
+Rotate with `POST /admin/api-keys/:id/rotate`, revoke via `POST /admin/api-keys/:id/revoke`, and update metadata with `PATCH /admin/api-keys/:id`.
+
+## Authentication Layer
+
+- Routes tagged `authMode: 'apiKey' | 'jwt' | 'both'` now enforce authentication before proxying.
+- API keys are read from the `x-api-key` header; successful calls add `x-api-key-id`, `x-principal-scopes`, and `x-principal-subject` headers upstream.
+- JWTs are verified with `jose`, supporting HS secrets (`JWT_SECRET`) or remote JWKS (`JWT_JWKS_URI`) and optional issuer/audience enforcement.
+- Principal context is attached to `req.principal` for use in future middleware.
+
 ## Proxy Behaviour
 
 - Requests are matched by HTTP method and `path-to-regexp` pattern priority (higher priority wins).
@@ -90,6 +120,8 @@ On success the gateway immediately serves traffic for matching requests, forward
 - Harden the proxy path (timeouts, retries, structured telemetry).
 - Layer on authentication (API keys, JWT) to complement rate limiting.
 - Expand automated tests with Jest + supertest covering admin, proxy, and limiter flows.
+- Layer on Redis-backed rate limiting.
+- Expand automated tests with Jest + supertest covering admin and proxy flows.
 
 ## License
 
