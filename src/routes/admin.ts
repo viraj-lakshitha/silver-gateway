@@ -15,6 +15,7 @@ import {
   normalizeUpdateApiKeyInput
 } from '@auth/api-key.validation';
 import { getUsageSummary, listUsageLogs } from '@analytics/usage-log.service';
+import { listPlugins } from '@plugins/registry';
 import {
   createRoute,
   deleteRoute,
@@ -39,6 +40,18 @@ router.get(
   asyncHandler(async (_req, res) => {
     const routes = await listRoutes();
     res.json({ data: routes });
+  })
+);
+
+router.get(
+  '/plugins',
+  asyncHandler(async (_req, res) => {
+    const plugins = listPlugins().map(({ name, version, description }) => ({
+      name,
+      version,
+      description
+    }));
+    res.json({ data: plugins });
   })
 );
 

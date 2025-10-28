@@ -63,7 +63,7 @@ export const flushQueue = async (): Promise<void> => {
   try {
     await UsageLogModel.insertMany(
       batch.map((item) => ({
-        routeId: item.routeId,
+        routeId: new Types.ObjectId(item.routeId),
         method: item.method,
         statusCode: item.statusCode,
         durationMs: item.durationMs,

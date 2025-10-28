@@ -19,6 +19,7 @@
       "@config/*": ["./config/*"],
       "@database/*": ["./database/*"],
       "@http/*": ["./http/*"],
+      "@plugins/*": ["./plugins/*"],
       "@proxy/*": ["./proxy/*"],
       "@ratelimit/*": ["./ratelimit/*"],
       "@routes": ["./routes/index"],
