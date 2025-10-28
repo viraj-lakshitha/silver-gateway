@@ -1,11 +1,14 @@
+import crypto from 'node:crypto';
+
 import express, { Router } from 'express';
 
 import { resolvePrincipalForRoute } from '@auth/auth.middleware';
 import type { ApiKeyPrincipal } from '@auth/principal';
 import { logger } from '@config/logger';
-import { HttpError, NotFoundError } from '@http/errors';
+import { HttpError, NotFoundError, TooManyRequestsError } from '@http/errors';
 import { resolveRoute } from '@proxy/route.cache';
 import { proxyServer } from '@proxy/proxy.server';
+import { consumeRateLimit } from '@ratelimit/rate-limiter';
 
 const router = Router();
 
@@ -22,6 +25,39 @@ router.use(
     }
 
     const { route } = match;
+
+    const identifier = (() => {
+      const apiKey = req.header('x-api-key');
+      if (apiKey) {
+        return `key:${apiKey}`;
+      }
+      const forwardedFor = req.header('x-forwarded-for');
+      if (forwardedFor) {
+        return `ip:${forwardedFor.split(',')[0]?.trim() ?? req.ip}`;
+      }
+      return `ip:${req.ip ?? req.socket.remoteAddress ?? 'unknown'}`;
+    })();
+
+    const rateLimitResult = await consumeRateLimit({
+      identifier,
+      routeId: route.id,
+      limit: route.rateLimit?.limit,
+      windowSec: route.rateLimit?.windowSec
+    });
+
+    const resetSeconds = Math.max(1, Math.ceil(rateLimitResult.resetMs / 1000));
+
+    res.setHeader('x-ratelimit-limit', rateLimitResult.limit.toString());
+    res.setHeader('x-ratelimit-remaining', rateLimitResult.remaining.toString());
+    res.setHeader('x-ratelimit-reset', resetSeconds.toString());
+
+    if (!rateLimitResult.allowed) {
+      res.setHeader('retry-after', resetSeconds.toString());
+      throw new TooManyRequestsError('Rate limit exceeded', {
+        identifier: crypto.createHash('sha1').update(identifier).digest('hex'),
+        routeId: route.id
+      });
+    }
 
     await resolvePrincipalForRoute(req, route);
 

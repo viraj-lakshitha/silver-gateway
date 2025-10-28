@@ -3,6 +3,7 @@ import http from 'node:http';
 import env from '@config/env';
 import { logger } from '@config/logger';
 import { connectMongo, disconnectMongo } from '@database/mongo';
+import { connectRedis, disconnectRedis } from '@database/redis';
 import { createApp } from '@http/app';
 
 const app = createApp();
@@ -10,7 +11,7 @@ const app = createApp();
 let server: Server | null = null;
 
 const startServer = async (): Promise<Server> => {
-  await connectMongo();
+  await Promise.all([connectMongo(), connectRedis()]);
 
   return new Promise((resolve) => {
     server = app.listen(env.port, () => {
@@ -37,9 +38,9 @@ const gracefulShutdown = (signal: NodeJS.Signals) => {
       process.exit();
     });
 
-  void disconnectMongo()
+  void Promise.all([disconnectMongo(), disconnectRedis()])
     .catch((error) => {
-      logger.error({ err: error }, 'Error closing MongoDB connection');
+      logger.error({ err: error }, 'Error disconnecting data stores');
     })
     .finally(() => {
       closeServer();

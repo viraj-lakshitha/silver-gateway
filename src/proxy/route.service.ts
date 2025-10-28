@@ -65,32 +65,55 @@ export const updateRoute = async (
   id: string,
   input: NormalizedRouteUpdateInput
 ): Promise<RouteDto | null> => {
-  const updatePayload: Record<string, unknown> = {};
+  const setPayload: Record<string, unknown> = {};
+  const unsetPayload: Record<string, 1> = {};
 
-  if (input.name !== undefined) updatePayload.name = input.name;
-  if (input.description !== undefined) updatePayload.description = input.description;
-  if (input.pattern !== undefined) updatePayload.pattern = input.pattern;
-  if (input.methods !== undefined) updatePayload.methods = input.methods;
-  if (input.authMode !== undefined) updatePayload.authMode = input.authMode;
-  if (input.enabled !== undefined) updatePayload.enabled = input.enabled;
-  if (input.priority !== undefined) updatePayload.priority = input.priority;
+  if (input.name !== undefined) setPayload.name = input.name;
+  if (input.description !== undefined) setPayload.description = input.description;
+  if (input.pattern !== undefined) setPayload.pattern = input.pattern;
+  if (input.methods !== undefined) setPayload.methods = input.methods;
+  if (input.authMode !== undefined) setPayload.authMode = input.authMode;
+  if (input.enabled !== undefined) setPayload.enabled = input.enabled;
+  if (input.priority !== undefined) setPayload.priority = input.priority;
   if (input.upstream !== undefined) {
     if (input.upstream.target !== undefined) {
-      updatePayload['upstream.target'] = input.upstream.target;
+      setPayload['upstream.target'] = input.upstream.target;
     }
     if (input.upstream.timeoutMs !== undefined) {
-      updatePayload['upstream.timeoutMs'] = input.upstream.timeoutMs;
+      setPayload['upstream.timeoutMs'] = input.upstream.timeoutMs;
     }
     if (input.upstream.headers !== undefined) {
-      updatePayload['upstream.headers'] = input.upstream.headers;
+      setPayload['upstream.headers'] = input.upstream.headers;
+    }
+  }
+  if (input.rateLimit !== undefined) {
+    if (input.rateLimit === null) {
+      unsetPayload.rateLimit = 1;
+    } else {
+      setPayload.rateLimit = {
+        limit: input.rateLimit.limit,
+        windowSec: input.rateLimit.windowSec
+      };
     }
   }
 
-  const updated = await RouteModel.findByIdAndUpdate(
-    id,
-    { $set: updatePayload },
-    { new: true, runValidators: true }
-  ).exec();
+  const updateOperations: Record<string, unknown> = {};
+  if (Object.keys(setPayload).length > 0) {
+    updateOperations.$set = setPayload;
+  }
+  if (Object.keys(unsetPayload).length > 0) {
+    updateOperations.$unset = unsetPayload;
+  }
+
+  if (Object.keys(updateOperations).length === 0) {
+    const existing = await RouteModel.findById(id).exec();
+    return existing ? toDto(existing) : null;
+  }
+
+  const updated = await RouteModel.findByIdAndUpdate(id, updateOperations, {
+    new: true,
+    runValidators: true
+  }).exec();
 
   if (!updated) {
     return null;

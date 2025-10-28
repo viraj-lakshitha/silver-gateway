@@ -19,6 +19,7 @@
       "@database/*": ["./database/*"],
       "@http/*": ["./http/*"],
       "@proxy/*": ["./proxy/*"],
+      "@ratelimit/*": ["./ratelimit/*"],
       "@routes": ["./routes/index"],
       "@routes/*": ["./routes/*"],
       "@utils/*": ["./utils/*"]

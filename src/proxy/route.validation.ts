@@ -10,6 +10,11 @@ const UpstreamSchema = z.object({
   headers: z.record(z.string(), z.string().min(1).max(256)).optional()
 });
 
+const RateLimitSchema = z.object({
+  limit: z.number().int().positive(),
+  windowSec: z.number().int().positive()
+});
+
 const BaseRouteSchema = z.object({
   name: z.string().min(1).max(80),
   description: z.string().min(1).max(280).optional(),
@@ -21,13 +26,15 @@ const BaseRouteSchema = z.object({
   authMode: z.enum(authModes).optional(),
   enabled: z.boolean().optional(),
   priority: z.number().int().min(0).max(100).optional(),
-  upstream: UpstreamSchema
+  upstream: UpstreamSchema,
+  rateLimit: RateLimitSchema.optional()
 });
 
 export const CreateRouteSchema = BaseRouteSchema;
 
 export const UpdateRouteSchema = BaseRouteSchema.partial().extend({
-  upstream: UpstreamSchema.partial().optional()
+  upstream: UpstreamSchema.partial().optional(),
+  rateLimit: z.union([RateLimitSchema, z.null()]).optional()
 });
 
 export type CreateRouteInput = z.infer<typeof CreateRouteSchema>;
@@ -46,12 +53,17 @@ export type NormalizedRouteInput = Omit<
     timeoutMs: number;
     headers?: Record<string, string>;
   };
+  rateLimit?: {
+    limit: number;
+    windowSec: number;
+  };
 };
 
 export type NormalizedRouteUpdateInput = Partial<
-  Omit<NormalizedRouteInput, 'upstream'>
+  Omit<NormalizedRouteInput, 'upstream' | 'rateLimit'>
 > & {
   upstream?: Partial<NormalizedRouteInput['upstream']>;
+  rateLimit?: NormalizedRouteInput['rateLimit'] | null;
 };
 
 export const normalizeRouteCreateInput = (payload: unknown): NormalizedRouteInput => {
@@ -71,7 +83,13 @@ export const normalizeRouteCreateInput = (payload: unknown): NormalizedRouteInpu
       target: parsed.upstream.target,
       timeoutMs: parsed.upstream.timeoutMs ?? 10_000,
       headers: parsed.upstream.headers
-    }
+    },
+    rateLimit: parsed.rateLimit
+      ? {
+          limit: parsed.rateLimit.limit,
+          windowSec: parsed.rateLimit.windowSec
+        }
+      : undefined
   };
 };
 
@@ -79,7 +97,7 @@ export const normalizeRouteUpdateInput = (
   payload: unknown
 ): NormalizedRouteUpdateInput => {
   const parsed = UpdateRouteSchema.parse(payload);
-  const result: NormalizedRouteUpdateInput = {};
+  const result: Partial<NormalizedRouteUpdateInput> = {};
 
   if (parsed.name !== undefined) result.name = parsed.name;
   if (parsed.description !== undefined) result.description = parsed.description;
@@ -102,6 +120,16 @@ export const normalizeRouteUpdateInput = (
       result.upstream = upstream;
     }
   }
+  if (parsed.rateLimit !== undefined) {
+    if (parsed.rateLimit === null) {
+      result.rateLimit = null;
+    } else {
+      result.rateLimit = {
+        limit: parsed.rateLimit.limit,
+        windowSec: parsed.rateLimit.windowSec
+      };
+    }
+  }
 
-  return result;
+  return result as NormalizedRouteUpdateInput;
 };

@@ -9,6 +9,7 @@ src/
   config/      # environment + logging helpers (import via @config/*)
   auth/        # API key & JWT logic (@auth/*)
   database/    # MongoDB connection helpers (@database/*)
+  ratelimit/   # Redis token bucket logic (@ratelimit/*)
   http/        # Express app factory and middlewares (@http/*)
   proxy/       # route registry + proxy engine (@proxy/*)
   routes/      # HTTP route definitions (health, admin, gateway)
@@ -66,10 +67,24 @@ curl -X POST http://localhost:3000/admin/routes \
       "target": "http://127.0.0.1:4100",
       "timeoutMs": 10000
     }
+    "rateLimit": {
+      "limit": 200,
+      "windowSec": 60
+    }
   }'
 ```
 
 On success the gateway immediately serves traffic for matching requests, forwarding them to the configured upstream. Update or remove routes with `PATCH /admin/routes/:id` and `DELETE /admin/routes/:id`.
+
+- Include `rateLimit` overrides per route to customise the bucket size and window seconds.
+- Send `{"rateLimit": null}` in a `PATCH` request to remove an override and fall back to defaults.
+
+## Rate Limiting
+
+- Backed by Redis using a token-bucket script (`src/ratelimit/rate-limiter.ts`).
+- Default policy comes from `RATE_LIMIT_DEFAULT_LIMIT` (requests) and `RATE_LIMIT_DEFAULT_WINDOW_SEC` (seconds).
+- Identifiers are derived from `x-api-key` if present, otherwise the request IP (including `x-forwarded-for`).
+- Responses include `x-ratelimit-limit`, `x-ratelimit-remaining`, and `x-ratelimit-reset` headers, plus `retry-after` on `429`.
 
 ## Admin API (API Keys)
 
@@ -103,6 +118,8 @@ Rotate with `POST /admin/api-keys/:id/rotate`, revoke via `POST /admin/api-keys/
 ## Next Steps
 
 - Harden the proxy path (timeouts, retries, structured telemetry).
+- Layer on authentication (API keys, JWT) to complement rate limiting.
+- Expand automated tests with Jest + supertest covering admin, proxy, and limiter flows.
 - Layer on Redis-backed rate limiting.
 - Expand automated tests with Jest + supertest covering admin and proxy flows.
 

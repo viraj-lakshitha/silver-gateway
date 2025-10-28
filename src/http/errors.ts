@@ -25,6 +25,13 @@ export class ValidationError extends HttpError {
   }
 }
 
+export class TooManyRequestsError extends HttpError {
+  constructor(message = 'Too Many Requests', details?: unknown) {
+    super(429, message, details);
+    this.name = 'TooManyRequestsError';
+  }
+}
+
 export class UnauthorizedError extends HttpError {
   constructor(message = 'Unauthorized', details?: unknown) {
     super(401, message, details);
