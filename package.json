@@ -14,7 +14,10 @@
     "start": "node dist/server.js",
     "lint": "eslint \"src/**/*.ts\"",
     "format": "prettier --write \"{src,test}/**/*.ts\"",
-    "test": "echo \"Add your test runner\" && exit 0",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:unit": "jest --runTestsByPath test/unit",
+    "test:e2e": "jest --runTestsByPath test/e2e",
     "prepare": "husky install"
   },
   "keywords": [
@@ -42,7 +45,9 @@
   "devDependencies": {
     "@types/express": "^5.0.5",
     "@types/http-proxy": "^1.17.17",
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.9.1",
+    "@types/supertest": "^6.0.3",
     "@typescript-eslint/eslint-plugin": "^8.46.2",
     "@typescript-eslint/parser": "^8.46.2",
     "eslint": "^8.57.1",
@@ -50,8 +55,13 @@
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import": "^2.32.0",
     "husky": "^9.1.7",
+    "ioredis-mock": "^8.13.0",
+    "jest": "^30.2.0",
+    "mongodb-memory-server": "^10.2.3",
     "pino-pretty": "^13.1.2",
     "prettier": "^3.6.2",
+    "supertest": "^7.1.4",
+    "ts-jest": "^29.4.5",
     "tsc-alias": "^1.8.16",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3"

@@ -125,7 +125,7 @@ PLAN.md
 - Seed dashboards/aggregations for quick insights.
 - Branch to use: `feat/analytics`.
 
-### Iteration 6 — Plugin Framework (in progress)
+### Iteration 6 — Plugin Framework (completed)
 - Define plugin manifest schema and execution sandbox.
 - Support pre, post, and error hooks with shared context.
 - Provide example plugins (header injector, response redactor).

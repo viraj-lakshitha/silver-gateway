@@ -1,0 +1,28 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "rootDir": "./",
+    "noEmit": true,
+    "types": ["jest", "node"],
+    "baseUrl": "./",
+    "paths": {
+      "@auth/*": ["./src/auth/*"],
+      "@analytics/*": ["./src/analytics/*"],
+      "@config/*": ["./src/config/*"],
+      "@database/*": ["./src/database/*"],
+      "@http/*": ["./src/http/*"],
+      "@plugins/*": ["./src/plugins/*"],
+      "@plugins/executor": ["./src/plugins/executor"],
+      "@plugins/registry": ["./src/plugins/registry"],
+      "@plugins/types": ["./src/plugins/types"],
+      "@proxy/*": ["./src/proxy/*"],
+      "@ratelimit/*": ["./src/ratelimit/*"],
+      "@routes": ["./src/routes/index"],
+      "@routes/*": ["./src/routes/*"],
+      "@utils/*": ["./src/utils/*"],
+      "jose": ["./test/stubs/jose"],
+      "test/*": ["./test/*"]
+    }
+  },
+  "include": ["test/**/*.ts", "src/**/*.d.ts"]
+}

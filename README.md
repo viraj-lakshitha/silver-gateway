@@ -44,6 +44,8 @@ npm run lint         # run ESLint across the src tree
 npm run format       # format TypeScript sources with Prettier
 npm run build        # type-check and emit JavaScript to dist/
 npm run start        # run the compiled server from dist/
+npm run test         # execute Jest unit/integration suites
+npx tsc -p tsconfig.test.json  # optional type-check for tests
 ```
 
 ## Docker Workflow
@@ -115,6 +117,7 @@ On success the gateway immediately serves traffic for matching requests, forward
 }
 ```
 - List loaded plugins via `GET /admin/plugins`.
+- See `examples/plugins/plugin-route-example.json` for a complete route payload that wires the bundled sample plugins together.
 
 ## Admin API (API Keys)
 
