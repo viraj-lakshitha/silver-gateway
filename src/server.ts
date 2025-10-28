@@ -4,6 +4,7 @@ import env from '@config/env';
 import { logger } from '@config/logger';
 import { connectMongo, disconnectMongo } from '@database/mongo';
 import { connectRedis, disconnectRedis } from '@database/redis';
+import { flushQueue as flushUsageLogs } from '@analytics/usage-log.service';
 import { createApp } from '@http/app';
 
 const app = createApp();
@@ -38,7 +39,7 @@ const gracefulShutdown = (signal: NodeJS.Signals) => {
       process.exit();
     });
 
-  void Promise.all([disconnectMongo(), disconnectRedis()])
+  void Promise.all([flushUsageLogs(), disconnectMongo(), disconnectRedis()])
     .catch((error) => {
       logger.error({ err: error }, 'Error disconnecting data stores');
     })

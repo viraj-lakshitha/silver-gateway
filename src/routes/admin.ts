@@ -14,6 +14,7 @@ import {
   normalizeCreateApiKeyInput,
   normalizeUpdateApiKeyInput
 } from '@auth/api-key.validation';
+import { getUsageSummary, listUsageLogs } from '@analytics/usage-log.service';
 import {
   createRoute,
   deleteRoute,
@@ -38,6 +39,65 @@ router.get(
   asyncHandler(async (_req, res) => {
     const routes = await listRoutes();
     res.json({ data: routes });
+  })
+);
+
+router.get(
+  '/usage',
+  asyncHandler(async (req, res) => {
+    const { from, to, routeId, apiKeyDisplayId, statusCode } = req.query;
+
+    const parseDate = (value: unknown) => {
+      if (!value) return undefined;
+      const date = new Date(String(value));
+      return Number.isNaN(date.getTime()) ? undefined : date;
+    };
+
+    const parseNumber = (value: unknown) => {
+      if (value === undefined) return undefined;
+      const parsed = Number(value);
+      return Number.isNaN(parsed) ? undefined : parsed;
+    };
+
+    const summary = await getUsageSummary({
+      from: parseDate(from),
+      to: parseDate(to),
+      routeId: routeId ? String(routeId) : undefined,
+      apiKeyDisplayId: apiKeyDisplayId ? String(apiKeyDisplayId) : undefined,
+      statusCode: parseNumber(statusCode)
+    });
+
+    res.json({ data: summary });
+  })
+);
+
+router.get(
+  '/usage/logs',
+  asyncHandler(async (req, res) => {
+    const { from, to, routeId, apiKeyDisplayId, statusCode, limit } = req.query;
+
+    const parseDate = (value: unknown) => {
+      if (!value) return undefined;
+      const date = new Date(String(value));
+      return Number.isNaN(date.getTime()) ? undefined : date;
+    };
+
+    const parseNumber = (value: unknown) => {
+      if (value === undefined) return undefined;
+      const parsed = Number(value);
+      return Number.isNaN(parsed) ? undefined : parsed;
+    };
+
+    const logs = await listUsageLogs({
+      from: parseDate(from),
+      to: parseDate(to),
+      routeId: routeId ? String(routeId) : undefined,
+      apiKeyDisplayId: apiKeyDisplayId ? String(apiKeyDisplayId) : undefined,
+      statusCode: parseNumber(statusCode),
+      limit: parseNumber(limit)
+    });
+
+    res.json({ data: logs });
   })
 );
 
